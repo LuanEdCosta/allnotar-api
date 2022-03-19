@@ -3,14 +3,9 @@ import { ForbiddenException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
-import { SignInDto, SignUpDto } from './dto';
-import { PrismaService } from '../prisma/prisma.service';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { JwtDto, SignInDto, SignUpDto } from './dto';
 
-type JwtTokenPayload = {
-  sub: string;
-  name: string;
-  email: string;
-};
 @Injectable()
 export class AuthService {
   constructor(
@@ -71,7 +66,7 @@ export class AuthService {
     return { accessToken };
   }
 
-  async signJwtToken(payload: JwtTokenPayload) {
+  async signJwtToken(payload: JwtDto) {
     const secret = this.configService.get('JWT_SECRET');
 
     return this.jwtService.signAsync(payload, {
