@@ -11,10 +11,34 @@ datasource db {
 }
 
 model User {
+  @@map("users")
   id String @id @default(uuid())
   email String @unique
   password String
   name String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  panels Panel[]
+}
+
+model Panel {
+  @@map("panels")
+  id String @id @default(uuid())
+  name String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  notes Note[]
+}
+
+model Note {
+  @@map("notes")
+  id String @id @default(uuid())
+  title String
+  content String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  panelId String
+  panel Panel @relation(fields: [panelId], references: [id], onDelete: Cascade)
 }
