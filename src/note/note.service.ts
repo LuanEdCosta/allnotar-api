@@ -19,9 +19,7 @@ export class NoteService {
 
   async findById(id: string) {
     return await this.prismaService.note.findUnique({
-      where: {
-        id,
-      },
+      where: { id },
     });
   }
 

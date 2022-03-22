@@ -1,6 +1,6 @@
 import { IsNotEmpty, IsOptional, IsUUID } from 'class-validator';
 
-export class PanelDto {
+export class UpdatePanelDto {
   @IsUUID('4')
   @IsOptional()
   id: string;

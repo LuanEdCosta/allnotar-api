@@ -8,10 +8,9 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { GetUser } from 'src/auth/decorator';
 import { JwtGuard } from 'src/auth/guard';
-import { PanelDto } from './dto';
 import { PanelService } from './panel.service';
+import { CreatePanelDto, UpdatePanelDto } from './dto';
 
 @UseGuards(JwtGuard)
 @Controller('panels')
@@ -19,8 +18,8 @@ export class PanelController {
   constructor(private panelService: PanelService) {}
 
   @Post()
-  create(@GetUser('id') userId: string, @Body() dto: PanelDto) {
-    return this.panelService.create(userId, dto);
+  create(@Body() dto: CreatePanelDto) {
+    return this.panelService.create(dto);
   }
 
   @Get()
@@ -34,7 +33,7 @@ export class PanelController {
   }
 
   @Patch()
-  update(@Body() dto: PanelDto) {
+  update(@Body() dto: UpdatePanelDto) {
     return this.panelService.update(dto);
   }
 

@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { PanelDto } from './dto';
+import { CreatePanelDto, UpdatePanelDto } from './dto';
 
 @Injectable()
 export class PanelService {
   constructor(private prismaService: PrismaService) {}
 
-  async create(userId: string, dto: PanelDto) {
-    const { name } = dto;
+  async create(dto: CreatePanelDto) {
+    const { userId, name } = dto;
     return await this.prismaService.panel.create({
       data: { name, userId },
     });
@@ -19,13 +19,11 @@ export class PanelService {
 
   async findById(id: string) {
     return await this.prismaService.panel.findUnique({
-      where: {
-        id,
-      },
+      where: { id },
     });
   }
 
-  async update(dto: PanelDto) {
+  async update(dto: UpdatePanelDto) {
     const { id, name } = dto;
     return await this.prismaService.panel.update({
       data: { name },

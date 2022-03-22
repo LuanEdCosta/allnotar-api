@@ -27,9 +27,7 @@ export class UserService {
 
   async delete(id: string) {
     const user = await this.prismaService.user.delete({
-      where: {
-        id,
-      },
+      where: { id },
     });
 
     delete user.password;
@@ -38,7 +36,6 @@ export class UserService {
 
   async update(dto: UpdateUserDto) {
     const { id, name } = dto;
-
     const user = await this.prismaService.user.update({
       data: { name },
       where: { id },
