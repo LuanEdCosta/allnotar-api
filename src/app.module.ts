@@ -7,6 +7,7 @@ import { UserModule } from './user/user.module';
 import { NoteModule } from './note/note.module';
 import { PanelModule } from './panel/panel.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { RefreshTokenModule } from './refresh-token/refresh-token.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { PrismaModule } from './prisma/prisma.module';
     NoteModule,
     PanelModule,
     PrismaModule,
+    RefreshTokenModule,
   ],
   controllers: [AppController],
   providers: [AppService],
