@@ -19,16 +19,7 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   panels Panel[]
-  refreshTokens RefreshToken[]
-}
-
-model RefreshToken {
-  @@map("refreshTokens")
-  id String @id @default(uuid())
-  expiresIn DateTime
-  createdAt DateTime @default(now())
-  userId String
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  refreshToken String?
 }
 
 model Panel {

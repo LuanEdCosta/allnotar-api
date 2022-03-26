@@ -3,14 +3,12 @@ import {
   BadRequestException,
   ForbiddenException,
   Injectable,
-  UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { RefreshTokenService } from 'src/refresh-token/refresh-token.service';
-import { JwtDto, RefreshTokenDto, SignInDto, SignUpDto } from './dto';
+import { TokenDto, SignInDto, SignUpDto } from './dto';
 
 @Injectable()
 export class AuthService {
@@ -18,7 +16,6 @@ export class AuthService {
     private jwtService: JwtService,
     private prismaService: PrismaService,
     private configService: ConfigService,
-    private refreshTokenService: RefreshTokenService,
   ) {}
 
   async signup(dto: SignUpDto) {
@@ -33,18 +30,21 @@ export class AuthService {
         },
       });
 
-      const accessToken = await this.generateJwtToken({
+      const payload: TokenDto = {
         sub: user.id,
         name: user.name,
         email: user.email,
+      };
+
+      const accessToken = await this.generateAccessToken(payload);
+      const refreshToken = await this.generateRefreshToken(payload);
+
+      await this.prismaService.user.update({
+        data: { refreshToken },
+        where: { id: user.id },
       });
 
-      const refreshToken = await this.refreshTokenService.create(user.id);
-
-      return {
-        accessToken,
-        refreshToken,
-      };
+      return { accessToken, refreshToken };
     } catch (error) {
       if (error instanceof PrismaClientKnownRequestError) {
         if (error.code === 'P2002') {
@@ -69,50 +69,50 @@ export class AuthService {
 
     if (!passwordMatches) throw new ForbiddenException('Credentials incorrect');
 
-    const accessToken = await this.generateJwtToken({
+    const payload: TokenDto = {
       sub: user.id,
       name: user.name,
       email: user.email,
-    });
-
-    await this.refreshTokenService.deleteManyByUserId(user.id);
-    const refreshToken = await this.refreshTokenService.create(user.id);
-
-    return {
-      accessToken,
-      refreshToken,
     };
-  }
 
-  async refreshToken({ refreshToken, userId }: RefreshTokenDto) {
-    const refreshTokenBeingUsed = await this.refreshTokenService.findById(
-      refreshToken,
-    );
+    const accessToken = await this.generateAccessToken(payload);
 
-    const error = new BadRequestException('Invalid refresh token');
-    if (!refreshTokenBeingUsed) throw error;
-    if (refreshTokenBeingUsed.userId !== userId) throw error;
-
-    if (refreshTokenBeingUsed.expiresIn.getTime() <= Date.now()) {
-      await this.refreshTokenService.delete(refreshToken);
-      throw new UnauthorizedException('Refresh token expired');
+    if (user.refreshToken) {
+      return {
+        accessToken,
+        refreshToken: user.refreshToken,
+      };
     }
 
-    await this.refreshTokenService.deleteManyByUserId(userId);
+    const refreshToken = await this.generateRefreshToken(payload);
+
+    await this.prismaService.user.update({
+      data: { refreshToken },
+      where: { id: user.id },
+    });
+
+    return { accessToken, refreshToken };
+  }
+
+  async refreshToken(refreshToken: string) {
+    const payload = await this.verifyRefreshToken(refreshToken);
+
+    const error = new BadRequestException('Invalid refresh token');
+    if (!payload) throw error;
 
     const user = await this.prismaService.user.findUnique({
-      where: {
-        id: userId,
-      },
+      where: { id: payload.sub },
     });
 
-    const newAccessToken = await this.generateJwtToken({
-      sub: user.id,
-      name: user.name,
-      email: user.email,
-    });
+    if (user?.refreshToken !== refreshToken) throw error;
 
-    const newRefreshToken = await this.refreshTokenService.create(userId);
+    const newAccessToken = await this.generateAccessToken(payload);
+    const newRefreshToken = await this.generateRefreshToken(payload);
+
+    await this.prismaService.user.update({
+      data: { refreshToken: newRefreshToken },
+      where: { id: payload.sub },
+    });
 
     return {
       accessToken: newAccessToken,
@@ -120,12 +120,39 @@ export class AuthService {
     };
   }
 
-  private async generateJwtToken(payload: JwtDto) {
-    const secret = this.configService.get('JWT_SECRET');
-    const expiresIn = this.configService.get('JWT_EXPIRES_IN');
+  async logout(refreshToken: string) {
+    const payload = await this.verifyRefreshToken(refreshToken);
+    if (!payload) throw new BadRequestException('Invalid refresh token');
+    await this.prismaService.user.update({
+      data: { refreshToken: null },
+      where: { id: payload.sub },
+    });
+  }
+
+  private async generateAccessToken(payload: TokenDto) {
+    const secret = this.configService.get('ACCESS_TOKEN_SECRET');
+    const expiresIn = this.configService.get('ACCESS_TOKEN_EXPIRES_IN');
     return this.jwtService.signAsync(payload, {
       expiresIn,
       secret,
     });
+  }
+
+  private async generateRefreshToken(payload: TokenDto) {
+    const secret = this.configService.get('REFRESH_TOKEN_SECRET');
+    return this.jwtService.signAsync(payload, { secret });
+  }
+
+  private async verifyRefreshToken(refreshToken: string): Promise<TokenDto> {
+    try {
+      const secret = this.configService.get('REFRESH_TOKEN_SECRET');
+      const { sub, name, email } = await this.jwtService.verifyAsync<TokenDto>(
+        refreshToken,
+        { secret },
+      );
+      return { sub, name, email };
+    } catch {
+      return null;
+    }
   }
 }

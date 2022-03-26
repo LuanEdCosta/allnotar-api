@@ -13,6 +13,7 @@ export class UserService {
 
     if (!user) throw new NotFoundException('User not found');
     delete user.password;
+    delete user.refreshToken;
     return user;
   }
 
@@ -21,6 +22,7 @@ export class UserService {
     return users.map((user) => {
       const userClone = { ...user };
       delete userClone.password;
+      delete userClone.refreshToken;
       return userClone;
     });
   }
@@ -31,6 +33,7 @@ export class UserService {
     });
 
     delete user.password;
+    delete user.refreshToken;
     return user;
   }
 
@@ -42,6 +45,7 @@ export class UserService {
     });
 
     delete user.password;
+    delete user.refreshToken;
     return user;
   }
 }
