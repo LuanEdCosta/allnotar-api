@@ -36,7 +36,7 @@ $ yarn test:cov
 
 ## :page_with_curl: License
 
-This project is under the MIT LICENSE.
+This project is under the [MIT LICENSE](./LICENSE).
 
 ## :man: Author
 
