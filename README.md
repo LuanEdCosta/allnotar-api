@@ -1,6 +1,6 @@
 ## :notebook: Allnotar API
 
-The place where you can write all your notes.
+Allnotar - The place where you can write all your notes.
 
 ## :ballot_box_with_check: Installation
 
@@ -36,7 +36,7 @@ $ yarn test:cov
 
 ## :page_with_curl: License
 
-This project is under the [MIT LICENSE](./LICENSE).
+This project is under the [MIT LICENSE](./LICENSE)
 
 ## :man: Author
 
