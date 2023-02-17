@@ -5,7 +5,7 @@ Allnotar - The place where you can write all your notes.
 ## :ballot_box_with_check: Installation
 
 ```bash
-$ yarn install
+yarn install
 ```
 
 ## :play_or_pause_button: Running the app
